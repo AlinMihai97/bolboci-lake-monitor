@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+  <title>Bolboci lake monitoring</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/3.27/esri/css/esri.css">
+  <style>
+    html,
+    body,
+    #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <!-- Load areas info-->
+  <script src="areas.js"></script>
+  <script src="https://js.arcgis.com/3.27/"></script>
+  <script>
+
+    function getPolygonGraphic(areaInfo) {
+      var myPolygon = {
+        "geometry": {
+          "rings": [
+            areaInfo.coordinates
+          ]
+        },
+        "popupTemplate": { // autocasts as new PopupTemplate()
+          title: "Area" + areaInfo.id,
+          content: []
+        },
+        "symbol": {
+          "color": areaInfo.fillColor,
+          "outline": {
+            "color": areaInfo.outlineColor,
+            "width": 1,
+            "type": "esriSLS",
+            "style": "esriSLSSolid"
+          },
+          "type": "esriSFS",
+          "style": "esriSFSSolid"
+        }
+      };
+      return myPolygon;
+    }
+    var map;
+    var graphicArray = [];
+
+    require(["esri/map", "esri/graphic", "esri/dijit/PopupTemplate", "dojo/domReady!"], function (Map, Graphic, PopupTemplate) {
+      map = new Map("map", {
+        basemap: "hybrid",  //For full list of pre-defined basemaps, navigate to http://arcg.is/1JVo6Wd
+        center: [25.428420, 45.347050], // longitude, latitude
+        zoom: 14
+      });
+      map.on("load", function () {
+        console.log(areas.length);
+        for (var i = 0; i < areas.length; i++) {
+          var area = getPolygonGraphic(areas[i]);
+
+          // var template = new PopupTemplate({
+          //   title: "Zona " + areas[i].id,
+          //   fieldInfos: [],
+          //   mediaInfos: []
+          // });
+          // template.title = "Zona " + areas[i].id;
+
+          console.log(area);
+          var area1 = new Graphic(area);
+          console.log(area1)
+          //area1.popupTemplate = template;
+          map.graphics.add(area1);
+        }
+      });
+
+    });
+  </script>
+</head>
+
+<body>
+  <div class="level">
+      <div id="map"></div>
+  </div>
+</body>
+
+</html>

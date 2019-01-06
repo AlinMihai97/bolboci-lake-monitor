@@ -1,0 +1,19 @@
+#viewDiv {
+    padding: 0;
+    margin: 0;
+    height: 80vh;
+    width: 75vw;
+}
+
+.title {
+    margin-top: 2vh;
+    text-align: center;
+    font-size: 4vh;
+}
+
+#side-panel {
+    height: 80vh;
+}
+#select-poluant, #submit-incident, #poluant-table {
+    margin-bottom: 10vh;
+}

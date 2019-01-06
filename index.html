@@ -1,75 +1,183 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
-    <title>Bolboci lake monitoring</title>
-    <link rel="stylesheet" href="https://js.arcgis.com/3.27/esri/css/esri.css">
-    <style>
-      html, body, #map {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-    <script src="https://js.arcgis.com/3.27/"></script>
+
+<head>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Bolboci lake monitor</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.10/esri/css/main.css">
+    <link rel="stylesheet" href="pageStylesheet.css">
+    <script src="https://js.arcgis.com/4.10/"></script>
+    <script src="areas.js"></script>
+    <script src="poluantData.js"></script>
+
     <script>
 
-function getPolygonGraphic(coordinates) {
-    var myPolygon = {
-            "geometry": {
-                "rings":[
-                    coordinates
-                ]
-            },
-            "symbol": {
-                "color":[255,0,0,64],
-                "outline": {
-                    "color":[0,0,0,255],
-                    "width":1,
-                    "type":"esriSLS",
-                    "style":"esriSLSSolid"
-                },
-                "type":"esriSFS",
-                "style":"esriSFSSolid"
-            }
-        };
-    return myPolygon; 
-}
-      var map;
-        
-      require(["esri/map", "esri/graphic", "dojo/domReady!"], function(Map, Graphic) {
-        map = new Map("map", {
-          basemap: "hybrid",  //For full list of pre-defined basemaps, navigate to http://arcg.is/1JVo6Wd
-          center: [25.428420, 45.347050], // longitude, latitude
-          zoom: 14
-        });
-        map.on("load", function() {
-        var area = getPolygonGraphic([
-                 [25.43204,45.34181],
-                        [25.42838,45.34116],
-                        [25.42832,45.3408],
-                        [25.42769,45.34058],
-                        [25.43189,45.33903],
-                        [25.43218,45.33938],
-                        [25.43243,45.3399],
-                        [25.43275,45.34033],
-                        [25.43269,45.34077],
-                        [25.43237,45.34101],
-                        [25.4323,45.3415],
-                        [25.43204,45.34181]
-        ]);
-        console.log(area);
-        var area1 = new Graphic(area);
-        console.log(area1)
-        map.graphics.add(area1);
-        });
-       
-      });
-    </script>
-  </head>
+        // global variables
+        var map;
+        var view;
+        var graphicsArray;
 
-  <body>
-    <div id="map"></div>
-  </body>
+        function getFillColor(poluantInfo, selectedDay) {
+            for (var i = 0; i < poluantLimits.length; i++) {
+                if (poluantInfo.name == poluantLimits[i].name) {
+                    return [255, 0, 0, poluantInfo.values[selectedDay] / poluantLimits[i].limit];
+                }
+            }
+            return [255, 0, 0, 1];
+        }
+
+        function initGraphics(Graphic) {
+            graphicsArray.forEach(function (existingGraphic) {
+                view.graphics.remove(existingGraphic);
+            });
+            for (var i = 0; i < areas.length; i++) {
+                var area = getPolygonGraphic(areas[i]);
+                var graphicElement = new Graphic(area);
+                graphicsArray.push(graphicElement);
+                view.graphics.add(graphicElement);
+            }
+        }
+
+        function getPolygonGraphic(areaInfo) {
+            var poluantInfo;
+
+            for (var i = 0; i < poluantData.length; i++) {
+                if (poluantData[i].areaId == areaInfo.id) {
+                    poluantInfo = poluantData[i];
+                }
+            }
+            var polygon = {
+                type: "polygon", // autocasts as new Polygon()
+                rings: areaInfo.coordinates
+            };
+
+            // Create a symbol for rendering the graphic
+            var fillSymbol = {
+                type: "simple-fill", // autocasts as new SimpleFillSymbol()
+                color: getFillColor(poluantInfo.poluants[0], 6),
+                outline: { // autocasts as new SimpleLineSymbol()
+                    color: areaInfo.outlineColor,
+                    width: 1
+                }
+
+            };
+
+            var areaPopupTemplate = {
+                title: "Detalii zona " + areaInfo.id,
+                content: [{
+                    type: "media",
+                    mediaInfos: [{
+                        "title": "<b>Valori " + poluantInfo.poluants[0].name + " pentru utlima saptamana</b>",
+                        "type": "line-chart",
+                        "caption": "",
+                        "value": {
+                            "theme": "Tom",
+                            "fields": [
+                                "value1",
+                                "value2",
+                                "value3",
+                                "value4",
+                                "value5",
+                                "value6",
+                                "value7"
+                            ],
+                        }
+                    }]
+                }],
+            }
+            var graphicAttributes = {
+                value1: poluantInfo.poluants[0].values[0],
+                value2: poluantInfo.poluants[0].values[1],
+                value3: poluantInfo.poluants[0].values[2],
+                value4: poluantInfo.poluants[0].values[3],
+                value5: poluantInfo.poluants[0].values[4],
+                value6: poluantInfo.poluants[0].values[5],
+                value7: poluantInfo.poluants[0].values[6]
+            }
+
+            // Object on which the graphic object is initialized
+            var graphicProperties = {
+                geometry: polygon,
+                symbol: fillSymbol,
+                popupTemplate: areaPopupTemplate, // autocasts as new PopupTemplate()
+                attributes: graphicAttributes
+            }
+
+            return graphicProperties;
+        }
+
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/support/ContentElement/Media/LineChart"
+        ], function (
+            Map, MapView, Graphic, LineChart
+        ) {
+                graphicsArray = [];
+
+                map = new Map({
+                    basemap: "hybrid"
+                });
+
+                view = new MapView({
+                    center: [25.428420, 45.347050],
+                    container: "viewDiv",
+                    map: map,
+                    zoom: 15
+                });
+
+                initGraphics(Graphic);
+            });
+    </script>
+</head>
+
+<body>
+    <h1 class="title">BOLBOCI LAKE MONITOR</h1>
+    <div class="columns">
+        <div class="column is-9" id="viewDiv"></div>
+        <div class="column">
+            <div id="side-panel" class="section">
+                <div id="select-poluant" class="select is-medium">
+                    <select>
+                        <option>COX</option>
+                        <option>Iarba</option>
+                    </select>
+                </div>
+                <div id="submit-incident">
+                    <a class="button">Raporteaza un incident</a>
+                </div>
+                <table id="poluant-table" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Denumire poluant</th>
+                            <th>Valoare limita</th>
+                            <th>Unitate de masura</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>COX</td>
+                            <td>200</td>
+                            <td>grame/litru</td>
+                        </tr>
+                        <tr>
+                            <td>Iarba</td>
+                            <td>3.420</td>
+                            <td>grame/litru</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+
 </html>
