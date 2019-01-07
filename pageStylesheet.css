@@ -1,19 +1,73 @@
+body {
+    height: 100vh;
+    background-color: #7f8c8d;
+}
 #viewDiv {
+    position: relative;
     padding: 0;
     margin: 0;
-    height: 80vh;
-    width: 75vw;
+    height: calc(100vh - 3.25rem);
+    width: 100%;
 }
 
-.title {
-    margin-top: 2vh;
-    text-align: center;
-    font-size: 4vh;
+.box-class {
+    position: absolute;
+    top: 10vh;
+    left: 15px;
+    z-index: 20;  
+    transition: all 0.3s;
 }
 
-#side-panel {
-    height: 80vh;
+.fa-angle-right {
+    font-size: 2rem;
+    margin-top: 5px;
 }
-#select-poluant, #submit-incident, #poluant-table {
-    margin-bottom: 10vh;
+
+.my-controls {
+    max-height: 0;
+    max-width: 0;
+    transition: max-height 0.3s;
+    transition: max-width 0.3s;
+    overflow: hidden;
+}
+
+.my-controls-active {
+    max-height: 999px;
+    max-width: 999px;
+    transition: max-height 0.3s;
+    transition: max-width 0.3s;
+}
+
+.not-rotated-arrow {
+    transform: rotate(0deg);
+    transition: transform 0.3s linear;
+}
+.rotate-arrow {
+    transform: rotate(180deg);
+    transition: transform 0.3s linear;
+}
+
+.level-left {
+    transition: all 0.3s linear;
+}
+
+.text {
+    display: inline-block;
+    font-size: 1rem;
+    margin-top: 6px;
+}
+
+#submit-incident {
+    margin-bottom: 8px;
+    margin-top: 8px;
+}
+
+.modal-box {
+    height: 43vh;
+}
+
+#submit-email-incident {
+    display: block;
+    width:10vh;
+    margin: 8px auto;
 }

@@ -2,7 +2,15 @@
 <html>
 
 <head>
+    <script type="text/javascript" src="https://cdn.emailjs.com/sdk/2.2.4/email.min.js"></script>
+    <script type="text/javascript">
+        (function () {
+            emailjs.init("user_sgD11l86ntbB6F8okFnHc");
+        })();
+    </script>
 
+    <script src="sendEmail.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 
@@ -16,13 +24,48 @@
     <script src="areas.js"></script>
     <script src="poluantData.js"></script>
 
-    <script>
 
+    <script>
         // global variables
         var map;
         var view;
         var graphicsArray;
 
+        var controlsExpanded = false;
+
+        function registerListeners() {
+            $("#submit-incident").on("click", function () {
+                $(".modal").addClass("is-active");
+            });
+
+            $(".modal-close").on("click", function () {
+                $(".modal").removeClass("is-active");
+            });
+
+            $("#control-panel-expand").on("click", function () {
+                if (controlsExpanded) {
+                    $(".my-controls").removeClass("my-controls-active");
+                    $("#control-panel-expand").removeClass("rotate-arrow");
+                    $("#control-panel-expand").addClass("not-rotated-arrow");
+                } else {
+                    $(".my-controls").addClass("my-controls-active");
+                    $("#control-panel-expand").removeClass("not-rotated-arrow");
+                    $("#control-panel-expand").addClass("rotate-arrow");
+                }
+                controlsExpanded = !controlsExpanded;
+            })
+
+            $("#submit-email-incident").on("click", function () {
+                var name = $("#form-volunteer").val();
+                var text = $("#form-textarea").val();
+
+                if (name !== "" && text !== "") {
+                    sendEmail(emailjs, text, name);
+                }
+
+                $(".modal").removeClass("is-active");
+            });
+        }
         function getFillColor(poluantInfo, selectedDay) {
             for (var i = 0; i < poluantLimits.length; i++) {
                 if (poluantInfo.name == poluantLimits[i].name) {
@@ -134,50 +177,120 @@
                 });
 
                 initGraphics(Graphic);
+                registerListeners();
             });
     </script>
 </head>
 
 <body>
-    <h1 class="title">BOLBOCI LAKE MONITOR</h1>
-    <div class="columns">
-        <div class="column is-9" id="viewDiv"></div>
-        <div class="column">
-            <div id="side-panel" class="section">
-                <div id="select-poluant" class="select is-medium">
-                    <select>
-                        <option>COX</option>
-                        <option>Iarba</option>
-                    </select>
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://bulma.io">
+                <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28">
+            </a>
+
+            <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarBasicExample" class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item">
+                    Pagina cursului
+                </a>
+
+                <a class="navbar-item">
+                    Documentatie proiect
+                </a>
+            </div>
+
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <a class="button is-primary">
+                            Log out
+                        </a>
+                    </div>
                 </div>
-                <div id="submit-incident">
-                    <a class="button">Raporteaza un incident</a>
+            </div>
+        </div>
+    </nav>
+    <div class="modal">
+        <div class="modal-background"></div>
+        <div class="modal-content">
+            <div class="box modal-box">
+                <div class="title is-4">Trimite detalii despre incident</div>
+                <div class="title is-6">Ai observat un incident pe lacul Bolboci? Completeaza campurile de mai jos cu
+                    informatii relevante. Administratorii aplicatiei vor fi notificati de acest incident.</div>
+                <span class="text">Nume voluntar: </span>
+                <input id="form-volunteer" class="input" type="text" placeholder="Nume voluntar">
+                <span class="text">Detalii incident: </span>
+                <textarea id="form-textarea" class="textarea" placeholder="Descrie incidentul in amanunt.."></textarea>
+                <a id="submit-email-incident" class="button">Trimite</a>
+            </div>
+        </div>
+        <button class="modal-close is-large" aria-label="close"></button>
+    </div>
+
+
+    <div id="viewDiv">
+        <div class="is-desktop">
+            <div class="box box-class">
+                <div>
+                    <div class="level">
+                        <div class="level-left">
+                            <p class="title is-5">Panou de control</p>
+                        </div>
+                        <div class="level-right">
+                            <span id="control-panel-expand" class="icon i-custom is-large not-rotated-arrow">
+                                <div>
+                                    <i class="fas fa-angle-right"></i>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <table id="poluant-table" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
-                    <thead>
-                        <tr>
-                            <th>Denumire poluant</th>
-                            <th>Valoare limita</th>
-                            <th>Unitate de masura</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>COX</td>
-                            <td>200</td>
-                            <td>grame/litru</td>
-                        </tr>
-                        <tr>
-                            <td>Iarba</td>
-                            <td>3.420</td>
-                            <td>grame/litru</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="content my-controls">
+                    <span class="text">Selecteaza tipul de poluant vizualizat: </span>
+                    <span id="select-poluant" class="select">
+                        <select>
+                            <option>COX</option>
+                            <option>Iarba</option>
+                        </select>
+                    </span>
+                    <div id="submit-incident">
+                        <a class="button">Raporteaza un incident</a>
+                    </div>
+                    <span class="text">Valori limita inscrise pentru poluanti: </span>
+                    <table id="poluant-table" class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                        <thead>
+                            <tr>
+                                <th>Denumire poluant</th>
+                                <th>Valoare limita</th>
+                                <th>Unitate de masura</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>COX</td>
+                                <td>200</td>
+                                <td>grame/litru</td>
+                            </tr>
+                            <tr>
+                                <td>Iarba</td>
+                                <td>3.420</td>
+                                <td>grame/litru</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     </div>
-
 </body>
 
 </html>
