@@ -66,6 +66,7 @@
                 $(".modal").removeClass("is-active");
             });
         }
+
         function getFillColor(poluantInfo, selectedDay) {
             for (var i = 0; i < poluantLimits.length; i++) {
                 if (poluantInfo.name == poluantLimits[i].name) {
@@ -75,19 +76,19 @@
             return [255, 0, 0, 1];
         }
 
-        function initGraphics(Graphic) {
+        function updateGraphics(Graphic, selectedDay) {
             graphicsArray.forEach(function (existingGraphic) {
                 view.graphics.remove(existingGraphic);
             });
             for (var i = 0; i < areas.length; i++) {
-                var area = getPolygonGraphic(areas[i]);
+                var area = getPolygonGraphic(areas[i], selectedDay);
                 var graphicElement = new Graphic(area);
                 graphicsArray.push(graphicElement);
                 view.graphics.add(graphicElement);
             }
         }
 
-        function getPolygonGraphic(areaInfo) {
+        function getPolygonGraphic(areaInfo, selectedDay) {
             var poluantInfo;
 
             for (var i = 0; i < poluantData.length; i++) {
@@ -103,7 +104,7 @@
             // Create a symbol for rendering the graphic
             var fillSymbol = {
                 type: "simple-fill", // autocasts as new SimpleFillSymbol()
-                color: getFillColor(poluantInfo.poluants[0], 6),
+                color: getFillColor(poluantInfo.poluants[0], selectedDay),
                 outline: { // autocasts as new SimpleLineSymbol()
                     color: areaInfo.outlineColor,
                     width: 1
@@ -155,6 +156,23 @@
             return graphicProperties;
         }
 
+        function getDate(daysBehind) {
+            var today = new Date();
+            var dd = today.getDate() - daysBehind;
+            var mm = today.getMonth() + 1; //January is 0!
+            var yyyy = today.getFullYear();
+
+            if (dd < 10) {
+                dd = '0' + dd;
+            }
+
+            if (mm < 10) {
+                mm = '0' + mm;
+            }
+
+            return today = mm + '/' + dd + '/' + yyyy;
+        }
+
         require([
             "esri/Map",
             "esri/views/MapView",
@@ -176,8 +194,16 @@
                     zoom: 15
                 });
 
-                initGraphics(Graphic);
+                updateGraphics(Graphic, 6);
                 registerListeners();
+                document.getElementById("date").innerHTML="Data: " + getDate(0);
+                var slider = document.getElementById("myRange");
+                slider.oninput = function() {
+                    updateGraphics(Graphic, slider.value - 1);
+                    document.getElementById("date").innerHTML="Data: " + getDate(7 - slider.value);
+                }
+
+                
             });
     </script>
 </head>
@@ -287,7 +313,16 @@
                         </tbody>
                     </table>
                 </div>
-
+            </div>
+        </div>
+        
+        <div class="slidecontainer">
+            <input type="range" min="1" max="7" value="7" class="slider" id="myRange">
+        </div>
+        
+        <div class="box-date">
+            <div class="box currentDate">
+                    <p id="date">Data: </p>
             </div>
         </div>
     </div>
