@@ -33,7 +33,10 @@
 
         var controlsExpanded = false;
 
-        function registerListeners() {
+        var selectedPoluant = poluantData[0].poluants[0].name;
+        var globalSelectedDay = 6;
+
+        function registerListeners(Graphic) {
             $("#submit-incident").on("click", function () {
                 $(".modal").addClass("is-active");
             });
@@ -65,8 +68,21 @@
 
                 $(".modal").removeClass("is-active");
             });
+
+            $("#select-poluant").change(function () {
+                selectedPoluant = $("#select-poluant").val();
+                updateGraphics(Graphic, globalSelectedDay);
+            });
         }
 
+        function getPoluantIndex() {
+            for (var i = 0; i < poluantData[0].poluants.length; i++) {
+                if (selectedPoluant === poluantData[0].poluants[i].name) {
+                    return i;
+                }
+            }
+            return 0;
+        }
         function getFillColor(poluantInfo, selectedDay) {
             for (var i = 0; i < poluantLimits.length; i++) {
                 if (poluantInfo.name == poluantLimits[i].name) {
@@ -80,6 +96,7 @@
             graphicsArray.forEach(function (existingGraphic) {
                 view.graphics.remove(existingGraphic);
             });
+            graphicsArray = [];
             for (var i = 0; i < areas.length; i++) {
                 var area = getPolygonGraphic(areas[i], selectedDay);
                 var graphicElement = new Graphic(area);
@@ -100,11 +117,13 @@
                 type: "polygon", // autocasts as new Polygon()
                 rings: areaInfo.coordinates
             };
+            
+            var poluantIndex = getPoluantIndex();
 
             // Create a symbol for rendering the graphic
             var fillSymbol = {
                 type: "simple-fill", // autocasts as new SimpleFillSymbol()
-                color: getFillColor(poluantInfo.poluants[0], selectedDay),
+                color: getFillColor(poluantInfo.poluants[poluantIndex], selectedDay),
                 outline: { // autocasts as new SimpleLineSymbol()
                     color: areaInfo.outlineColor,
                     width: 1
@@ -135,16 +154,17 @@
                     }]
                 }],
             }
+           
             var graphicAttributes = {
-                value1: poluantInfo.poluants[0].values[0],
-                value2: poluantInfo.poluants[0].values[1],
-                value3: poluantInfo.poluants[0].values[2],
-                value4: poluantInfo.poluants[0].values[3],
-                value5: poluantInfo.poluants[0].values[4],
-                value6: poluantInfo.poluants[0].values[5],
-                value7: poluantInfo.poluants[0].values[6]
+                value1: poluantInfo.poluants[poluantIndex].values[0],
+                value2: poluantInfo.poluants[poluantIndex].values[1],
+                value3: poluantInfo.poluants[poluantIndex].values[2],
+                value4: poluantInfo.poluants[poluantIndex].values[3],
+                value5: poluantInfo.poluants[poluantIndex].values[4],
+                value6: poluantInfo.poluants[poluantIndex].values[5],
+                value7: poluantInfo.poluants[poluantIndex].values[6]
             }
-
+           
             // Object on which the graphic object is initialized
             var graphicProperties = {
                 geometry: polygon,
@@ -194,16 +214,22 @@
                     zoom: 15
                 });
 
-                updateGraphics(Graphic, 6);
-                registerListeners();
-                document.getElementById("date").innerHTML="Data: " + getDate(0);
+                updateGraphics(Graphic, globalSelectedDay);
+                registerListeners(Graphic);
+                document.getElementById("date").innerHTML = "Data: " + getDate(0);
                 var slider = document.getElementById("myRange");
-                slider.oninput = function() {
-                    updateGraphics(Graphic, slider.value - 1);
-                    document.getElementById("date").innerHTML="Data: " + getDate(7 - slider.value);
+                slider.oninput = function () {
+                    globalSelectedDay = slider.value - 1;
+                    updateGraphics(Graphic, globalSelectedDay);
+                    document.getElementById("date").innerHTML = "Data: " + getDate(7 - slider.value);
                 }
 
-                
+                for(var i = 0; i < poluantLimits.length; i++) {
+                    $("#select-poluant").append("<option>" + poluantLimits[i].name + "</option>");
+                    $("#table-body").append("<tr><td>" + poluantLimits[i].name + 
+                                            "</td><td>" +  poluantLimits[i].limit +
+                                            "</td><td>" + poluantLimits[i].unit + "</td></tr>")
+                }
             });
     </script>
 </head>
@@ -212,7 +238,7 @@
     <nav class="navbar" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
             <a class="navbar-item" href="https://bulma.io">
-                <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28">
+                <img src="logo.jpg" width="112" height="28">
             </a>
 
             <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -224,11 +250,11 @@
 
         <div id="navbarBasicExample" class="navbar-menu">
             <div class="navbar-start">
-                <a class="navbar-item">
+                <a class="navbar-item" href="https://acs.curs.pub.ro/2018/course/view.php?id=704">
                     Pagina cursului
                 </a>
 
-                <a class="navbar-item">
+                <a class="navbar-item" href="https://docs.google.com/document/d/1Qed_0TC4cpLp_GR4jF4mipF_1hNBl6-auRWVor7wVRs/edit?usp=sharing">
                     Documentatie proiect
                 </a>
             </div>
@@ -281,10 +307,8 @@
                 </div>
                 <div class="content my-controls">
                     <span class="text">Selecteaza tipul de poluant vizualizat: </span>
-                    <span id="select-poluant" class="select">
-                        <select>
-                            <option>COX</option>
-                            <option>Iarba</option>
+                    <span class="select">
+                        <select id="select-poluant">
                         </select>
                     </span>
                     <div id="submit-incident">
@@ -299,30 +323,20 @@
                                 <th>Unitate de masura</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>COX</td>
-                                <td>200</td>
-                                <td>grame/litru</td>
-                            </tr>
-                            <tr>
-                                <td>Iarba</td>
-                                <td>3.420</td>
-                                <td>grame/litru</td>
-                            </tr>
+                        <tbody id="table-body">
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
-        
+
         <div class="slidecontainer">
             <input type="range" min="1" max="7" value="7" class="slider" id="myRange">
         </div>
-        
+
         <div class="box-date">
             <div class="box currentDate">
-                    <p id="date">Data: </p>
+                <p id="date">Data: </p>
             </div>
         </div>
     </div>
